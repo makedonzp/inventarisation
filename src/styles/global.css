@@ -1,0 +1,112 @@
+.app {
+  padding: 20px;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.add-product {
+  margin-bottom: 20px;
+}
+
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.product-list {
+  margin-bottom: 20px;
+}
+
+.modal-content {
+  width: 300px;
+  margin: auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+}
+
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/* Стили для модального окна */
+.modal-content {
+  width: 300px;
+  margin: auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.modal-header {
+  margin-bottom: 10px;
+}
+
+.modal-body {
+  margin-bottom: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+}
+.product-list-with-quantity {
+  margin-bottom: 20px;
+}
+
+.product-list-with-quantity .list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.product-list-with-quantity .badge {
+  font-size: 1rem;
+}
+.sort-buttons {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.sort-buttons .btn {
+  min-width: 178px;
+}
+.create-box {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 15px;
+  align-items: flex-start !important;
+}
+@media (max-width: 768px) {
+  .sort-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .redacting-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    gap: 12px;
+  }
+  .btn {
+    min-width: 113px;
+    margin: 0 !important;
+  }
+}
