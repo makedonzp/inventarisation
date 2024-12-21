@@ -137,6 +137,16 @@ const App = () => {
     setFilteredProducts(filtered);
   };
 
+  // Функция для обнуления остатков товара
+  const handleResetQuantities = () => {
+    const updatedProducts = products.map((product) => ({
+      ...product,
+      quantity: 0, // Обнуляем количество
+    }));
+    saveProducts(updatedProducts);
+    alert("Остатки товара обнулены!");
+  };
+
   return (
     <div className="app container">
       <h1 className="title">Инвентаризация товаров</h1>
@@ -149,7 +159,7 @@ const App = () => {
       )}
 
       {/* Добавление раздела */}
-      <div className="mb-3 create-box">
+      <div className="mb-3">
         <input
           type="text"
           placeholder="Добавить раздел"
@@ -157,13 +167,13 @@ const App = () => {
           value={newSection}
           onChange={(e) => setNewSection(e.target.value)}
         />
-        <button className="btn btn-success mt-2 " onClick={handleAddSection}>
+        <button className="btn btn-success mt-2" onClick={handleAddSection}>
           Создать раздел
         </button>
       </div>
 
       {/* Выбор раздела */}
-      <div className="mb-3 ">
+      <div className="mb-3">
         <select
           className="form-select"
           onChange={(e) => handleSelectSection(e.target.value)}
@@ -176,6 +186,11 @@ const App = () => {
           ))}
         </select>
       </div>
+
+      {/* Кнопка для обнуления остатков */}
+      <button className="btn btn-warning mb-3" onClick={handleResetQuantities}>
+        Обнулить остатки
+      </button>
 
       <AddProduct onAddProduct={handleAddProduct} sections={sections} />
       <SearchBar onSearch={handleSearch} />
