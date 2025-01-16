@@ -6,23 +6,29 @@ import ProductList from "./components/ProductList";
 import ProductListWithQuantity from "./components/ProductListWithQuantity";
 import Modal from "./components/Modal";
 import EditProductModal from "./components/EditProductModal";
-import "./styles/global.css";
+import InventoryModal from "./components/InventoryModal";
+import GroupManagementModal from "./components/GroupManagementModal";
+import InventoryResult from "./components/InventoryResult";
+import "./App.css";
 
 const App = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isInventoryModalVisible, setIsInventoryModalVisible] = useState(false);
+  const [isGroupModalVisible, setIsGroupModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showFullList, setShowFullList] = useState(false);
   const [sortBy, setSortBy] = useState("default");
-  const [sections, setSections] = useState([]); // Состояние для разделов
-  const [selectedSection, setSelectedSection] = useState(""); // Выбранный раздел
-  const [newSection, setNewSection] = useState(""); // Новый раздел для добавления
+  const [sections, setSections] = useState([]);
+  const [selectedSection, setSelectedSection] = useState("");
+  const [newSection, setNewSection] = useState("");
+  const [inventoryResults, setInventoryResults] = useState([]);
 
   useEffect(() => {
     loadProducts();
-    loadSections(); // Загружаем разделы из localStorage
+    loadSections();
   }, []);
 
   const loadProducts = () => {
@@ -77,6 +83,29 @@ const App = () => {
     );
     saveProducts(updatedProducts);
     setIsModalVisible(false);
+
+    // Обновляем результаты инвентаризации
+    const existingResult = inventoryResults.find(
+      (item) => item.code === selectedProduct.code
+    );
+    if (existingResult) {
+      const updatedResults = inventoryResults.map((item) =>
+        item.code === selectedProduct.code
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
+      );
+      setInventoryResults(updatedResults);
+    } else {
+      setInventoryResults([
+        ...inventoryResults,
+        {
+          code: selectedProduct.code,
+          brand: selectedProduct.brand,
+          model: selectedProduct.model,
+          quantity: quantity,
+        },
+      ]);
+    }
   };
 
   const handleEditProduct = (product) => {
@@ -97,6 +126,12 @@ const App = () => {
       (product) => product.code !== productCode
     );
     saveProducts(updatedProducts);
+
+    // Удаляем товар из результатов инвентаризации
+    const updatedResults = inventoryResults.filter(
+      (item) => item.code !== productCode
+    );
+    setInventoryResults(updatedResults);
   };
 
   const handleSort = (sortType) => {
@@ -128,7 +163,7 @@ const App = () => {
     }
     const updatedSections = [...sections, newSection];
     saveSections(updatedSections);
-    setNewSection(""); // Очищаем поле ввода
+    setNewSection("");
   };
 
   const handleSelectSection = (section) => {
@@ -137,28 +172,56 @@ const App = () => {
     setFilteredProducts(filtered);
   };
 
-  // Функция для обнуления остатков товара
   const handleResetQuantities = () => {
     const updatedProducts = products.map((product) => ({
       ...product,
-      quantity: 0, // Обнуляем количество
+      quantity: 0,
     }));
     saveProducts(updatedProducts);
+    setInventoryResults([]); // Очищаем результаты инвентаризации
     alert("Остатки товара обнулены!");
+  };
+
+  const handleInventoryScan = (barcode) => {
+    const product = products.find((p) => p.code === barcode);
+    if (product) {
+      setSelectedProduct(product);
+      setIsModalVisible(true);
+    } else {
+      alert("Товар не найден");
+    }
+  };
+
+  const handleEditGroup = (oldGroup, newGroup) => {
+    const updatedSections = sections.map((group) =>
+      group === oldGroup ? newGroup : group
+    );
+    saveSections(updatedSections);
+  };
+
+  const handleDeleteGroup = (group) => {
+    const updatedSections = sections.filter((g) => g !== group);
+    const updatedProducts = products.filter((p) => p.section !== group);
+    saveSections(updatedSections);
+    saveProducts(updatedProducts);
+
+    // Удаляем результаты инвентаризации для товаров из удаленной группы
+    const updatedResults = inventoryResults.filter(
+      (item) => !updatedProducts.some((p) => p.code === item.code)
+    );
+    setInventoryResults(updatedResults);
   };
 
   return (
     <div className="app container">
       <h1 className="title">Инвентаризация товаров</h1>
 
-      {/* Отображение выбранного раздела */}
       {selectedSection && (
         <p className="alert alert-info">
           Выбран раздел: <strong>{selectedSection}</strong>
         </p>
       )}
 
-      {/* Добавление раздела */}
       <div className="mb-3">
         <input
           type="text"
@@ -172,7 +235,6 @@ const App = () => {
         </button>
       </div>
 
-      {/* Выбор раздела */}
       <div className="mb-3">
         <select
           className="form-select"
@@ -187,9 +249,22 @@ const App = () => {
         </select>
       </div>
 
-      {/* Кнопка для обнуления остатков */}
       <button className="btn btn-warning mb-3" onClick={handleResetQuantities}>
         Обнулить остатки
+      </button>
+
+      <button
+        className="btn btn-primary mb-3"
+        onClick={() => setIsInventoryModalVisible(true)}
+      >
+        Инвентаризация
+      </button>
+
+      <button
+        className="btn btn-secondary mb-3"
+        onClick={() => setIsGroupModalVisible(true)}
+      >
+        Управление группами
       </button>
 
       <AddProduct onAddProduct={handleAddProduct} sections={sections} />
@@ -249,6 +324,61 @@ const App = () => {
         product={selectedProduct}
         onClose={() => setIsEditModalVisible(false)}
         onSave={handleSaveEditedProduct}
+      />
+      <InventoryModal
+        isVisible={isInventoryModalVisible}
+        onClose={() => setIsInventoryModalVisible(false)}
+        onManualInventory={() => {}}
+        onScan={handleInventoryScan}
+      />
+      <GroupManagementModal
+        isVisible={isGroupModalVisible}
+        onClose={() => setIsGroupModalVisible(false)}
+        groups={sections}
+        onEditGroup={handleEditGroup}
+        onDeleteGroup={handleDeleteGroup}
+      />
+      <InventoryResult
+        inventoryResults={inventoryResults}
+        onFilter={(filter) => {
+          // Логика фильтрации результатов инвентаризации
+          let sortedResults = [...inventoryResults];
+          switch (filter) {
+            case "priceAsc":
+              sortedResults.sort((a, b) => (a.price || 0) - (b.price || 0));
+              break;
+            case "priceDesc":
+              sortedResults.sort((a, b) => (b.price || 0) - (a.price || 0));
+              break;
+            case "nameAsc":
+              sortedResults.sort((a, b) => a.model.localeCompare(b.model));
+              break;
+            case "nameDesc":
+              sortedResults.sort((a, b) => b.model.localeCompare(a.model));
+              break;
+            default:
+              break;
+          }
+          setInventoryResults(sortedResults);
+        }}
+        onGroupBy={(groupBy) => {
+          // Логика группировки результатов инвентаризации
+          if (groupBy) {
+            const groupedResults = inventoryResults.reduce((acc, item) => {
+              const section =
+                products.find((p) => p.code === item.code)?.section ||
+                "Без группы";
+              if (!acc[section]) {
+                acc[section] = [];
+              }
+              acc[section].push(item);
+              return acc;
+            }, {});
+            setInventoryResults(Object.values(groupedResults).flat());
+          } else {
+            setInventoryResults([...inventoryResults]);
+          }
+        }}
       />
       <button
         className="btn btn-primary mt-3"
