@@ -9,6 +9,7 @@ import EditProductModal from "./components/EditProductModal";
 import InventoryModal from "./components/InventoryModal";
 import GroupManagementModal from "./components/GroupManagementModal";
 import InventoryResult from "./components/InventoryResult";
+import ProductFormModal from "./components/ProductFormModal"; // Новый компонент
 import "./App.css";
 
 const App = () => {
@@ -18,6 +19,7 @@ const App = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isInventoryModalVisible, setIsInventoryModalVisible] = useState(false);
   const [isGroupModalVisible, setIsGroupModalVisible] = useState(false);
+  const [isProductFormVisible, setIsProductFormVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showFullList, setShowFullList] = useState(false);
   const [sortBy, setSortBy] = useState("default");
@@ -25,6 +27,7 @@ const App = () => {
   const [selectedSection, setSelectedSection] = useState("");
   const [newSection, setNewSection] = useState("");
   const [inventoryResults, setInventoryResults] = useState([]);
+  const [scannedBarcode, setScannedBarcode] = useState(""); // Новое состояние для хранения отсканированного штрихкода
 
   useEffect(() => {
     loadProducts();
@@ -183,13 +186,22 @@ const App = () => {
   };
 
   const handleInventoryScan = (barcode) => {
+    console.log("Отсканированный штрихкод:", barcode);
     const product = products.find((p) => p.code === barcode);
     if (product) {
       setSelectedProduct(product);
-      setIsModalVisible(true);
+      setIsModalVisible(true); // Открываем модальное окно для изменения количества
     } else {
-      alert("Товар не найден");
+      setScannedBarcode(barcode); // Сохраняем отсканированный штрихкод
+      setIsProductFormVisible(true); // Открываем модальное окно для добавления товара
     }
+  };
+
+  const handleSaveScannedProduct = (newProduct) => {
+    const productWithBarcode = { ...newProduct, code: scannedBarcode };
+    handleAddProduct(productWithBarcode);
+    setIsProductFormVisible(false);
+    setScannedBarcode(""); // Очищаем штрихкод после добавления товара
   };
 
   const handleEditGroup = (oldGroup, newGroup) => {
@@ -337,6 +349,12 @@ const App = () => {
         groups={sections}
         onEditGroup={handleEditGroup}
         onDeleteGroup={handleDeleteGroup}
+      />
+      <ProductFormModal
+        isVisible={isProductFormVisible}
+        onClose={() => setIsProductFormVisible(false)}
+        onSave={handleSaveScannedProduct}
+        sections={sections} // Передаем разделы для выбора
       />
       <InventoryResult
         inventoryResults={inventoryResults}

@@ -6,6 +6,8 @@ const BarcodeScanner = ({ onScan, onClose }) => {
 
   useEffect(() => {
     if (!isInitialized.current) {
+      console.log("Инициализация Quagga...");
+
       Quagga.init(
         {
           inputStream: {
@@ -13,18 +15,18 @@ const BarcodeScanner = ({ onScan, onClose }) => {
             type: "LiveStream",
             target: document.querySelector("#scanner"),
             constraints: {
-              width: { min: 640 }, // Минимальная ширина
-              height: { min: 480 }, // Минимальная высота
-              aspectRatio: { ideal: 1.777 }, // Соотношение сторон 16:9
-              facingMode: "environment", // Используем заднюю камеру
+              width: { min: 640 },
+              height: { min: 480 },
+              aspectRatio: { ideal: 1.777 },
+              facingMode: "environment",
             },
           },
           decoder: {
-            readers: ["code_128_reader"],
+            readers: ["ean_reader"], // Используем EAN-ридер
           },
           locator: {
             halfSample: true,
-            patchSize: "medium", // Увеличиваем размер области сканирования
+            patchSize: "medium",
           },
         },
         (err) => {
@@ -32,23 +34,37 @@ const BarcodeScanner = ({ onScan, onClose }) => {
             console.error("Ошибка инициализации Quagga:", err);
             return;
           }
+          console.log("Quagga успешно инициализирован.");
           Quagga.start();
           isInitialized.current = true;
         }
       );
 
       Quagga.onDetected((data) => {
-        onScan(data.codeResult.code);
+        const rawCode = data.codeResult.code;
+        const cleanedCode = rawCode.replace(/\s/g, ""); // Удаляем пробелы
+        console.log("Штрихкод обнаружен:", cleanedCode);
+        console.log("Формат штрихкода:", data.codeResult.format);
+        console.log("Данные штрихкода:", data.codeResult);
+
+        onScan(cleanedCode);
         Quagga.stop();
-        onClose(); // Закрываем окно после успешного сканирования
+        onClose();
+      });
+
+      Quagga.onProcessed((result) => {
+        if (result) {
+          console.log("Обработка кадра...");
+        }
       });
     }
 
     // Очистка при размонтировании компонента
     return () => {
       if (isInitialized.current) {
+        console.log("Остановка Quagga...");
         Quagga.stop();
-        Quagga.offDetected(); // Отключаем обработчик
+        Quagga.offDetected();
       }
     };
   }, [onScan, onClose]);
@@ -75,7 +91,7 @@ const BarcodeScanner = ({ onScan, onClose }) => {
         }}
       ></div>
       <button
-        onClick={onClose} // Вызываем onClose при нажатии на кнопку
+        onClick={onClose}
         style={{
           position: "absolute",
           bottom: "20px",

@@ -3,18 +3,18 @@ import ReactModal from "react-modal";
 
 ReactModal.setAppElement("#root");
 
-const ProductFormModal = ({ isVisible, onClose, onSave }) => {
+const ProductFormModal = ({ isVisible, onClose, onSave, sections }) => {
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [price, setPrice] = useState("");
+  const [section, setSection] = useState("");
 
   const handleSave = () => {
-    if (!brand || !model || !price) {
+    if (!brand || !model || !price || !section) {
       alert("Пожалуйста, заполните все поля");
       return;
     }
-    onSave({ brand, model, price: parseFloat(price) });
-    onClose();
+    onSave({ brand, model, price: parseFloat(price), section });
   };
 
   return (
@@ -49,6 +49,18 @@ const ProductFormModal = ({ isVisible, onClose, onSave }) => {
           onChange={(e) => setPrice(e.target.value)}
           className="form-control mb-2"
         />
+        <select
+          className="form-select mb-2"
+          value={section}
+          onChange={(e) => setSection(e.target.value)}
+        >
+          <option value="">Выберите раздел</option>
+          {sections.map((section, index) => (
+            <option key={index} value={section}>
+              {section}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="modal-footer">
         <button onClick={handleSave} className="btn btn-primary">
