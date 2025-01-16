@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import BarcodeScanner from "./BarcodeScanner";
 
-const AddProduct = ({ onAddProduct, sections }) => {
+const AddProduct = ({ onAddProduct, sections, products }) => {
   const [code, setCode] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
@@ -13,6 +13,11 @@ const AddProduct = ({ onAddProduct, sections }) => {
     e.preventDefault();
     if (!code || !brand || !model || !section) {
       alert("Пожалуйста, заполните все поля");
+      return;
+    }
+    const productExists = products.some((p) => p.code === code);
+    if (productExists) {
+      alert("Товар с таким штрихкодом уже существует!");
       return;
     }
     onAddProduct({
@@ -30,7 +35,13 @@ const AddProduct = ({ onAddProduct, sections }) => {
   };
 
   const handleScan = (barcode) => {
-    setCode(barcode);
+    const productExists = products.some((p) => p.code === barcode);
+    if (productExists) {
+      alert("Товар с таким штрихкодом уже существует!");
+    } else {
+      setCode(barcode);
+      setMode("form"); // Переключаемся на форму добавления товара
+    }
   };
 
   return (
@@ -48,7 +59,7 @@ const AddProduct = ({ onAddProduct, sections }) => {
             Сканировать
           </button>
         </>
-      ) : mode === "manual" ? (
+      ) : mode === "manual" || mode === "form" ? (
         <>
           <input
             type="text"

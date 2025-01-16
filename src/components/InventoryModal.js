@@ -4,8 +4,32 @@ import BarcodeScanner from "./BarcodeScanner";
 
 ReactModal.setAppElement("#root");
 
-const InventoryModal = ({ isVisible, onClose, onManualInventory, onScan }) => {
-  const [mode, setMode] = useState(null);
+const InventoryModal = ({ isVisible, onClose, onScan, products }) => {
+  const [scannedProduct, setScannedProduct] = useState(null);
+  const [quantity, setQuantity] = useState("");
+
+  const handleScan = (barcode) => {
+    const product = products.find((p) => p.code === barcode);
+    if (product) {
+      setScannedProduct(product); // Устанавливаем найденный товар
+    } else {
+      const shouldAdd = window.confirm("Товар не найден. Добавить его?");
+      if (shouldAdd) {
+        onClose(); // Закрываем окно инвентаризации
+        onScan(barcode); // Передаем штрихкод для добавления товара
+      }
+    }
+  };
+
+  const handleUpdateQuantity = () => {
+    if (!quantity) {
+      alert("Пожалуйста, введите количество");
+      return;
+    }
+    onScan(scannedProduct.code, parseInt(quantity)); // Передаем код и количество
+    setScannedProduct(null); // Сбрасываем найденный товар
+    setQuantity(""); // Очищаем поле ввода
+  };
 
   return (
     <ReactModal
@@ -18,31 +42,27 @@ const InventoryModal = ({ isVisible, onClose, onManualInventory, onScan }) => {
         <h2>Инвентаризация</h2>
       </div>
       <div className="modal-body">
-        {mode === null ? (
-          <>
-            <button
-              onClick={() => setMode("manual")}
-              className="btn btn-primary me-2"
-            >
-              Вручную
-            </button>
-            <button onClick={() => setMode("scan")} className="btn btn-primary">
-              Сканировать
-            </button>
-          </>
-        ) : mode === "manual" ? (
+        {scannedProduct ? (
           <div>
+            <p>
+              Товар:{" "}
+              <strong>
+                {scannedProduct.brand} {scannedProduct.model}
+              </strong>
+            </p>
             <input
-              type="text"
-              placeholder="Введите штрихкод, модель или бренд"
-              className="form-control mb-3"
+              type="number"
+              placeholder="Количество"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="form-control mb-2"
             />
-            <button onClick={onManualInventory} className="btn btn-success">
-              Подтвердить
+            <button onClick={handleUpdateQuantity} className="btn btn-primary">
+              Сохранить
             </button>
           </div>
         ) : (
-          <BarcodeScanner onScan={onScan} onClose={onClose} />
+          <BarcodeScanner onScan={handleScan} onClose={onClose} />
         )}
       </div>
       <div className="modal-footer">
