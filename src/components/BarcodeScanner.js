@@ -12,6 +12,12 @@ const BarcodeScanner = ({ onScan, onClose }) => {
             name: "Live",
             type: "LiveStream",
             target: document.querySelector("#scanner"),
+            constraints: {
+              width: { min: 640 }, // Минимальная ширина
+              height: { min: 480 }, // Минимальная высота
+              aspectRatio: { ideal: 1.777 }, // Соотношение сторон 16:9
+              facingMode: "environment", // Используем заднюю камеру
+            },
           },
           decoder: {
             readers: ["code_128_reader"],
@@ -48,8 +54,16 @@ const BarcodeScanner = ({ onScan, onClose }) => {
   }, [onScan, onClose]);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "300px" }}>
-      <div id="scanner" style={{ width: "100%", height: "100%" }}></div>
+    <div style={{ position: "relative", width: "100%", height: "100vh" }}>
+      <div
+        id="scanner"
+        style={{
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          position: "relative",
+        }}
+      ></div>
       <div
         style={{
           position: "absolute",
@@ -62,7 +76,13 @@ const BarcodeScanner = ({ onScan, onClose }) => {
       ></div>
       <button
         onClick={onClose} // Вызываем onClose при нажатии на кнопку
-        style={{ marginTop: "10px" }}
+        style={{
+          position: "absolute",
+          bottom: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 1000,
+        }}
         className="btn btn-secondary"
       >
         Закрыть
